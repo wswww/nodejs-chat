@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <style>
+    .systemInfo {
+      color: red;
+    }
+  </style>
+</head>
+
+<body style="padding:3px;">
+  <h1>WebSocket聊天室 <small>当前在线人数：<span id="count">0</span></small></h1>
+
+  <div class="panel panel-primary">
+    <div class="panel-heading">发送消息</div>
+    <div class="panel-body">
+      <label>昵称： </label>
+      <input type="text" name="username" class="form-control" maxlength="20" id="name">
+
+      <br>
+
+      <label>消息：</label>
+      <textarea rows="4" class="form-control" maxlength="250" id="msg"></textarea>
+
+      <br>
+
+      <input type="button" value="发送消息" class="btn btn-primary pull-right" id="btnSend">
+    </div>
+  </div>
+
+  <ul class="list-group" id="msgList">
+    <!--<li class="list-group-item">
+      <span class="badge">14</span> Cras justo odio
+    </li>-->
+  </ul>
+
+
+
+  <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+
+  <script>
+    $(function () {
+      // 每当页面加载完毕，都会创建一个 ws 连接对象
+      var ws = new WebSocket('ws://192.168.1.103:3001');
+
+      // 可以监听 ws 对象的 onopen 事件，当触发这个事件的时候，就表示连接 webSocket 服务器成功了
+      ws.onopen = function () {
+      }
+
+      // 每当客户端接收到服务器的消息之后，会触发 onmessage
+      ws.onmessage = function (e) {
+        // 服务器发送过来的数据
+        var dataObj = JSON.parse(e.data);
+        var li = '<li class="list-group-item"><span class="badge">发送时间：' + dataObj.time + '</span><strong class="' + (dataObj.type == 2 ? 'systemInfo' : '') + '">' + dataObj.sender + '说：</strong> ' + dataObj.msg + '</li>';
+        $('#msgList').prepend(li);
+        $('#count').text(dataObj.count);
+      }
+
+
+      $('#btnSend').on('click', function () {
+        // 获取消息和昵称
+        var name = $('#name').val().trim();
+        var msg = $('#msg').val().trim();
+
+        if (name.length <= 0 || msg.length <= 0) {
+          return;
+        }
+
+        // 发送消息
+        ws.send(JSON.stringify({
+          name: name,
+          msg: msg
+        }));
+
+        // 五秒以后才能再次发送消息
+        // $('#btnSend').attr('disabled', 'disabled');
+        // setTimeout(function () {
+          // $('#btnSend').removeAttr('disabled');
+        // }, 5000);
+      });
+    });
+  </script>
+</body>
+
+</html>
